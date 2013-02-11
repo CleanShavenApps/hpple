@@ -14,10 +14,10 @@
 #import <libxml/xpath.h>
 #import <libxml/xpathInternals.h>
 
-NSDictionary *DictionaryForNode(xmlNodePtr currentNode, NSMutableDictionary *parentResult,BOOL parentContent);
-NSArray *PerformXPathQuery(xmlDocPtr doc, NSString *query);
+NSDictionary *DictionaryForNode(xmlNodePtr currentNode, NSMutableDictionary *parentResult, BOOL parentContent, TFHppleFetchRawContent wantsRawContent);
+NSArray *PerformXPathQuery(xmlDocPtr doc, NSString *query, TFHppleFetchRawContent wantsRawContent);
 
-NSDictionary *DictionaryForNode(xmlNodePtr currentNode, NSMutableDictionary *parentResult,BOOL parentContent)
+NSDictionary *DictionaryForNode(xmlNodePtr currentNode, NSMutableDictionary *parentResult, BOOL parentContent, TFHppleFetchRawContent wantsRawContent)
 {
   NSMutableDictionary *resultForNode = [NSMutableDictionary dictionary];
 
@@ -69,7 +69,7 @@ NSDictionary *DictionaryForNode(xmlNodePtr currentNode, NSMutableDictionary *par
 
           if (attribute->children)
             {
-              NSDictionary *childDictionary = DictionaryForNode(attribute->children, attributeDictionary,true);
+              NSDictionary *childDictionary = DictionaryForNode(attribute->children, attributeDictionary, true, wantsRawContent == TFHppleFetchRawContentAllNodes);
               if (childDictionary)
                 {
                   [attributeDictionary setObject:childDictionary forKey:@"attributeContent"];
@@ -95,7 +95,7 @@ NSDictionary *DictionaryForNode(xmlNodePtr currentNode, NSMutableDictionary *par
       NSMutableArray *childContentArray = [NSMutableArray array];
       while (childNode)
         {
-          NSDictionary *childDictionary = DictionaryForNode(childNode, resultForNode,false);
+          NSDictionary *childDictionary = DictionaryForNode(childNode, resultForNode, false, wantsRawContent == TFHppleFetchRawContentAllNodes);
           if (childDictionary)
             {
               [childContentArray addObject:childDictionary];
@@ -108,18 +108,21 @@ NSDictionary *DictionaryForNode(xmlNodePtr currentNode, NSMutableDictionary *par
         }
     }
 
-  xmlBufferPtr buffer = xmlBufferCreate();
-  xmlNodeDump(buffer, currentNode->doc, currentNode, 0, 0);
+  if (wantsRawContent != TFHppleFetchRawContentNever)
+  {
+    xmlBufferPtr buffer = xmlBufferCreate();
+    xmlNodeDump(buffer, currentNode->doc, currentNode, 0, 0);
 
-  NSString *rawContent = [NSString stringWithCString:(const char *)buffer->content encoding:NSUTF8StringEncoding];
-  [resultForNode setObject:rawContent forKey:@"raw"];
-
+    NSString *rawContent = [NSString stringWithCString:(const char *)buffer->content encoding:NSUTF8StringEncoding];
+    [resultForNode setObject:rawContent forKey:@"nodeRawContent"];
+	  
     xmlBufferFree(buffer);
+  }
     
   return resultForNode;
 }
 
-NSArray *PerformXPathQuery(xmlDocPtr doc, NSString *query)
+NSArray *PerformXPathQuery(xmlDocPtr doc, NSString *query, TFHppleFetchRawContent wantsRawContent)
 {
   xmlXPathContextPtr xpathCtx;
   xmlXPathObjectPtr xpathObj;
@@ -152,7 +155,7 @@ NSArray *PerformXPathQuery(xmlDocPtr doc, NSString *query)
   NSMutableArray *resultNodes = [NSMutableArray array];
   for (NSInteger i = 0; i < nodes->nodeNr; i++)
     {
-      NSDictionary *nodeDictionary = DictionaryForNode(nodes->nodeTab[i], nil,false);
+      NSDictionary *nodeDictionary = DictionaryForNode(nodes->nodeTab[i], nil, false, wantsRawContent);
       if (nodeDictionary)
         {
           [resultNodes addObject:nodeDictionary];
@@ -166,7 +169,7 @@ NSArray *PerformXPathQuery(xmlDocPtr doc, NSString *query)
   return resultNodes;
 }
 
-NSArray *PerformHTMLXPathQuery(NSData *document, NSString *query)
+NSArray *PerformHTMLXPathQuery(NSData *document, NSString *query, TFHppleFetchRawContent wantsRawContent)
 {
   xmlDocPtr doc;
 
@@ -179,13 +182,13 @@ NSArray *PerformHTMLXPathQuery(NSData *document, NSString *query)
       return nil;
     }
 
-  NSArray *result = PerformXPathQuery(doc, query);
+  NSArray *result = PerformXPathQuery(doc, query, wantsRawContent);
   xmlFreeDoc(doc);
 
   return result;
 }
 
-NSArray *PerformXMLXPathQuery(NSData *document, NSString *query)
+NSArray *PerformXMLXPathQuery(NSData *document, NSString *query, TFHppleFetchRawContent wantsRawContent)
 {
   xmlDocPtr doc;
 
@@ -198,7 +201,7 @@ NSArray *PerformXMLXPathQuery(NSData *document, NSString *query)
       return nil;
     }
 
-  NSArray *result = PerformXPathQuery(doc, query);
+  NSArray *result = PerformXPathQuery(doc, query, wantsRawContent);
   xmlFreeDoc(doc);
 
   return result;

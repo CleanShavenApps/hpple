@@ -6,5 +6,11 @@
 //  Copyright 2008 __MyCompanyName__. All rights reserved.
 //
 
-NSArray *PerformHTMLXPathQuery(NSData *document, NSString *query);
-NSArray *PerformXMLXPathQuery(NSData *document, NSString *query);
+typedef enum : NSInteger {
+	TFHppleFetchRawContentNever,
+	TFHppleFetchRawContentTopLevelNodesOnly,
+	TFHppleFetchRawContentAllNodes
+} TFHppleFetchRawContent;
+
+NSArray *PerformHTMLXPathQuery(NSData *document, NSString *query, TFHppleFetchRawContent wantsRawContent);
+NSArray *PerformXMLXPathQuery(NSData *document, NSString *query, TFHppleFetchRawContent wantsRawContent);

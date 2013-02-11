@@ -31,6 +31,7 @@
 #import <Foundation/Foundation.h>
 
 #import "TFHppleElement.h"
+#import "XPathQuery.h"
 
 @interface TFHpple : NSObject {
 @private
@@ -50,5 +51,9 @@
 - (TFHppleElement *) peekAtSearchWithXPathQuery:(NSString *)xPathOrCSS;
 
 @property (nonatomic, strong, readonly) NSData * data;
+
+// Set to YES if you want to be able to access the raw property of the
+// TFHppleElement returned in each search query
+@property (nonatomic) TFHppleFetchRawContent wantsRawContent;
 
 @end

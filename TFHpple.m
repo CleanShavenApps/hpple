@@ -28,7 +28,6 @@
 //  WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 #import "TFHpple.h"
-#import "XPathQuery.h"
 
 @implementation TFHpple
 
@@ -43,6 +42,8 @@
 
   data = theData;
   isXML = isDataXML;
+	
+  _wantsRawContent = TFHppleFetchRawContentNever;
 
   return self;
 }
@@ -76,9 +77,9 @@
 {
   NSArray * detailNodes = nil;
   if (isXML) {
-    detailNodes = PerformXMLXPathQuery(data, xPathOrCSS);
+    detailNodes = PerformXMLXPathQuery(data, xPathOrCSS, self.wantsRawContent);
   } else {
-    detailNodes = PerformHTMLXPathQuery(data, xPathOrCSS);
+    detailNodes = PerformHTMLXPathQuery(data, xPathOrCSS, self.wantsRawContent);
   }
 
   NSMutableArray * hppleElements = [NSMutableArray array];

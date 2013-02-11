@@ -30,6 +30,7 @@
 
 #import "TFHppleElement.h"
 
+static NSString * const TFHppleNodeRawKey				= @"nodeRawContent";
 static NSString * const TFHppleNodeContentKey           = @"nodeContent";
 static NSString * const TFHppleNodeNameKey              = @"nodeName";
 static NSString * const TFHppleNodeChildrenKey          = @"nodeChildArray";
@@ -64,7 +65,7 @@ static NSString * const TFHppleTextNodeName            = @"text";
 
 - (NSString *)raw
 {
-    return [node objectForKey:@"raw"];
+    return [node objectForKey:TFHppleNodeRawKey];
 }
 
 - (NSString *) content
