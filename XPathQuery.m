@@ -14,10 +14,10 @@
 #import <libxml/xpath.h>
 #import <libxml/xpathInternals.h>
 
-NSDictionary *DictionaryForNode(xmlNodePtr currentNode, NSMutableDictionary *parentResult, BOOL parentContent, TFHppleFetchRawContent wantsRawContent);
+NSDictionary *DictionaryForNode(xmlNodePtr ancestorNode, xmlNodePtr currentNode, NSMutableDictionary *parentResult, BOOL parentContent, TFHppleFetchRawContent wantsRawContent);
 NSArray *PerformXPathQuery(xmlDocPtr doc, NSString *query, TFHppleFetchRawContent wantsRawContent);
 
-NSDictionary *DictionaryForNode(xmlNodePtr currentNode, NSMutableDictionary *parentResult, BOOL parentContent, TFHppleFetchRawContent wantsRawContent)
+NSDictionary *DictionaryForNode(xmlNodePtr ancestorNode, xmlNodePtr currentNode, NSMutableDictionary *parentResult, BOOL parentContent, TFHppleFetchRawContent wantsRawContent)
 {
   NSMutableDictionary *resultForNode = [NSMutableDictionary dictionary];
 
@@ -69,7 +69,7 @@ NSDictionary *DictionaryForNode(xmlNodePtr currentNode, NSMutableDictionary *par
 
           if (attribute->children)
             {
-              NSDictionary *childDictionary = DictionaryForNode(attribute->children, attributeDictionary, true, wantsRawContent == TFHppleFetchRawContentAllNodes);
+              NSDictionary *childDictionary = DictionaryForNode(ancestorNode, attribute->children, attributeDictionary, true, wantsRawContent);
               if (childDictionary)
                 {
                   [attributeDictionary setObject:childDictionary forKey:@"attributeContent"];
@@ -95,7 +95,7 @@ NSDictionary *DictionaryForNode(xmlNodePtr currentNode, NSMutableDictionary *par
       NSMutableArray *childContentArray = [NSMutableArray array];
       while (childNode)
         {
-          NSDictionary *childDictionary = DictionaryForNode(childNode, resultForNode, false, wantsRawContent == TFHppleFetchRawContentAllNodes);
+          NSDictionary *childDictionary = DictionaryForNode(ancestorNode, childNode, resultForNode, false, wantsRawContent);
           if (childDictionary)
             {
               [childContentArray addObject:childDictionary];
@@ -108,7 +108,43 @@ NSDictionary *DictionaryForNode(xmlNodePtr currentNode, NSMutableDictionary *par
         }
     }
 
-  if (wantsRawContent != TFHppleFetchRawContentNever)
+	BOOL shouldGrabRawContent = NO;
+	
+	switch (wantsRawContent)
+	{
+		case TFHppleFetchRawContentAllNodes:
+		{
+			shouldGrabRawContent = YES;
+			break;
+		}
+			
+		case TFHppleFetchRawContentTopLevelNodesOnly:
+		{
+			if (ancestorNode == currentNode)
+				shouldGrabRawContent = YES;
+			else
+				shouldGrabRawContent = NO;
+			break;
+		}
+			
+		case TFHppleFetchRawContentTopLevelAndChildNodes:
+		{
+			if ((ancestorNode == currentNode) || (currentNode->parent == ancestorNode))
+				shouldGrabRawContent = YES;
+			else
+				shouldGrabRawContent = NO;
+			break;
+		}
+			
+		case TFHppleFetchRawContentNever:
+		default:
+		{
+			shouldGrabRawContent = NO;
+			break;
+		}
+	}
+		
+  if (shouldGrabRawContent)
   {
     xmlBufferPtr buffer = xmlBufferCreate();
     xmlNodeDump(buffer, currentNode->doc, currentNode, 0, 0);
@@ -155,7 +191,7 @@ NSArray *PerformXPathQuery(xmlDocPtr doc, NSString *query, TFHppleFetchRawConten
   NSMutableArray *resultNodes = [NSMutableArray array];
   for (NSInteger i = 0; i < nodes->nodeNr; i++)
     {
-      NSDictionary *nodeDictionary = DictionaryForNode(nodes->nodeTab[i], nil, false, wantsRawContent);
+      NSDictionary *nodeDictionary = DictionaryForNode(nodes->nodeTab[i], nodes->nodeTab[i], nil, false, wantsRawContent);
       if (nodeDictionary)
         {
           [resultNodes addObject:nodeDictionary];

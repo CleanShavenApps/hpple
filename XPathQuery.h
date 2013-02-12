@@ -9,6 +9,7 @@
 typedef enum : NSInteger {
 	TFHppleFetchRawContentNever,
 	TFHppleFetchRawContentTopLevelNodesOnly,
+	TFHppleFetchRawContentTopLevelAndChildNodes,		// Excludes grandchildren
 	TFHppleFetchRawContentAllNodes
 } TFHppleFetchRawContent;
 
