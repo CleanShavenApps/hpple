@@ -73,20 +73,25 @@
 #pragma mark -
 
 // Returns all elements at xPath.
+- (NSArray *) searchWithXPathQuery:(NSString *)xPathOrCSS error:(NSError **)error
+{
+	NSArray * detailNodes = nil;
+	if (isXML) {
+		detailNodes = PerformXMLXPathQuery(data, xPathOrCSS, self.wantsRawContent, error);
+	} else {
+		detailNodes = PerformHTMLXPathQuery(data, xPathOrCSS, self.wantsRawContent, error);
+	}
+	
+	NSMutableArray * hppleElements = [NSMutableArray array];
+	for (id node in detailNodes) {
+		[hppleElements addObject:[TFHppleElement hppleElementWithNode:node]];
+	}
+	return hppleElements;
+}
+
 - (NSArray *) searchWithXPathQuery:(NSString *)xPathOrCSS
 {
-  NSArray * detailNodes = nil;
-  if (isXML) {
-    detailNodes = PerformXMLXPathQuery(data, xPathOrCSS, self.wantsRawContent);
-  } else {
-    detailNodes = PerformHTMLXPathQuery(data, xPathOrCSS, self.wantsRawContent);
-  }
-
-  NSMutableArray * hppleElements = [NSMutableArray array];
-  for (id node in detailNodes) {
-    [hppleElements addObject:[TFHppleElement hppleElementWithNode:node]];
-  }
-  return hppleElements;
+	return [self searchWithXPathQuery:xPathOrCSS error:NULL];
 }
 
 // Returns first element at xPath

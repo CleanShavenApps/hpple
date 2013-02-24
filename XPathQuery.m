@@ -15,7 +15,7 @@
 #import <libxml/xpathInternals.h>
 
 NSDictionary *DictionaryForNode(xmlNodePtr ancestorNode, xmlNodePtr currentNode, NSMutableDictionary *parentResult, BOOL parentContent, TFHppleFetchRawContent wantsRawContent);
-NSArray *PerformXPathQuery(xmlDocPtr doc, NSString *query, TFHppleFetchRawContent wantsRawContent);
+NSArray *PerformXPathQuery(xmlDocPtr doc, NSString *query, TFHppleFetchRawContent wantsRawContent, NSError **error);
 
 NSDictionary *DictionaryForNode(xmlNodePtr ancestorNode, xmlNodePtr currentNode, NSMutableDictionary *parentResult, BOOL parentContent, TFHppleFetchRawContent wantsRawContent)
 {
@@ -158,7 +158,7 @@ NSDictionary *DictionaryForNode(xmlNodePtr ancestorNode, xmlNodePtr currentNode,
   return resultForNode;
 }
 
-NSArray *PerformXPathQuery(xmlDocPtr doc, NSString *query, TFHppleFetchRawContent wantsRawContent)
+NSArray *PerformXPathQuery(xmlDocPtr doc, NSString *query, TFHppleFetchRawContent wantsRawContent, NSError **error)
 {
   xmlXPathContextPtr xpathCtx;
   xmlXPathObjectPtr xpathObj;
@@ -167,14 +167,16 @@ NSArray *PerformXPathQuery(xmlDocPtr doc, NSString *query, TFHppleFetchRawConten
   xpathCtx = xmlXPathNewContext(doc);
   if(xpathCtx == NULL)
     {
-      NSLog(@"Unable to create XPath context.");
+		if (error != NULL)
+			*error = [NSError errorWithDomain:TFHppleErrorDomain code:TFHppleErrorCodeUnableToCreateParsingContext userInfo:nil];
       return nil;
     }
 
   /* Evaluate xpath expression */
   xpathObj = xmlXPathEvalExpression((xmlChar *)[query cStringUsingEncoding:NSUTF8StringEncoding], xpathCtx);
   if(xpathObj == NULL) {
-    NSLog(@"Unable to evaluate XPath.");
+	  if (error != NULL)
+		  *error = [NSError errorWithDomain:TFHppleErrorDomain code:TFHppleErrorCodeUnableToEvaluateOrParse userInfo:nil];
     xmlXPathFreeContext(xpathCtx);
     return nil;
   }
@@ -182,7 +184,7 @@ NSArray *PerformXPathQuery(xmlDocPtr doc, NSString *query, TFHppleFetchRawConten
   xmlNodeSetPtr nodes = xpathObj->nodesetval;
   if (!nodes)
     {
-      NSLog(@"Nodes was nil.");
+//      NSLog(@"Nodes was nil.");
       xmlXPathFreeObject(xpathObj);
       xmlXPathFreeContext(xpathCtx);
       return nil;
@@ -205,7 +207,7 @@ NSArray *PerformXPathQuery(xmlDocPtr doc, NSString *query, TFHppleFetchRawConten
   return resultNodes;
 }
 
-NSArray *PerformHTMLXPathQuery(NSData *document, NSString *query, TFHppleFetchRawContent wantsRawContent)
+NSArray *PerformHTMLXPathQuery(NSData *document, NSString *query, TFHppleFetchRawContent wantsRawContent, NSError **error)
 {
   xmlDocPtr doc;
 
@@ -214,17 +216,18 @@ NSArray *PerformHTMLXPathQuery(NSData *document, NSString *query, TFHppleFetchRa
 
   if (doc == NULL)
     {
-      NSLog(@"Unable to parse.");
+		if (error != NULL)
+			*error = [NSError errorWithDomain:TFHppleErrorDomain code:TFHppleErrorCodeUnableToEvaluateOrParse userInfo:nil];
       return nil;
     }
 
-  NSArray *result = PerformXPathQuery(doc, query, wantsRawContent);
+  NSArray *result = PerformXPathQuery(doc, query, wantsRawContent, error);
   xmlFreeDoc(doc);
 
   return result;
 }
 
-NSArray *PerformXMLXPathQuery(NSData *document, NSString *query, TFHppleFetchRawContent wantsRawContent)
+NSArray *PerformXMLXPathQuery(NSData *document, NSString *query, TFHppleFetchRawContent wantsRawContent, NSError **error)
 {
   xmlDocPtr doc;
 
@@ -233,11 +236,12 @@ NSArray *PerformXMLXPathQuery(NSData *document, NSString *query, TFHppleFetchRaw
 
   if (doc == NULL)
     {
-      NSLog(@"Unable to parse.");
+		if (error != NULL)
+			*error = [NSError errorWithDomain:TFHppleErrorDomain code:TFHppleErrorCodeUnableToEvaluateOrParse userInfo:nil];
       return nil;
     }
 
-  NSArray *result = PerformXPathQuery(doc, query, wantsRawContent);
+  NSArray *result = PerformXPathQuery(doc, query, wantsRawContent, error);
   xmlFreeDoc(doc);
 
   return result;

@@ -47,6 +47,7 @@
 + (TFHpple *) hppleWithXMLData:(NSData *)theData;
 + (TFHpple *) hppleWithHTMLData:(NSData *)theData;
 
+- (NSArray *) searchWithXPathQuery:(NSString *)xPathOrCSS error:(NSError **)error;
 - (NSArray *) searchWithXPathQuery:(NSString *)xPathOrCSS;
 - (TFHppleElement *) peekAtSearchWithXPathQuery:(NSString *)xPathOrCSS;
 

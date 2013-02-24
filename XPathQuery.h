@@ -6,6 +6,10 @@
 //  Copyright 2008 __MyCompanyName__. All rights reserved.
 //
 
+#define TFHppleErrorDomain								@"TFHppleErrorDomain"
+#define TFHppleErrorCodeUnableToEvaluateOrParse			100
+#define TFHppleErrorCodeUnableToCreateParsingContext	101
+
 typedef enum : NSInteger {
 	TFHppleFetchRawContentNever,
 	TFHppleFetchRawContentTopLevelNodesOnly,
@@ -13,5 +17,5 @@ typedef enum : NSInteger {
 	TFHppleFetchRawContentAllNodes
 } TFHppleFetchRawContent;
 
-NSArray *PerformHTMLXPathQuery(NSData *document, NSString *query, TFHppleFetchRawContent wantsRawContent);
-NSArray *PerformXMLXPathQuery(NSData *document, NSString *query, TFHppleFetchRawContent wantsRawContent);
+NSArray *PerformHTMLXPathQuery(NSData *document, NSString *query, TFHppleFetchRawContent wantsRawContent, NSError **error);
+NSArray *PerformXMLXPathQuery(NSData *document, NSString *query, TFHppleFetchRawContent wantsRawContent, NSError **error);
