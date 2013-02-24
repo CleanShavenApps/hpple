@@ -16,6 +16,9 @@
 
 NSDictionary *DictionaryForNode(xmlNodePtr ancestorNode, xmlNodePtr currentNode, NSMutableDictionary *parentResult, BOOL parentContent, TFHppleFetchRawContent wantsRawContent);
 NSArray *PerformXPathQuery(xmlDocPtr doc, NSString *query, TFHppleFetchRawContent wantsRawContent, NSError **error);
+NSError *LocalizedErrorFromDomainAndCode(NSString *domain, NSInteger code);
+
+#pragma mark -
 
 NSDictionary *DictionaryForNode(xmlNodePtr ancestorNode, xmlNodePtr currentNode, NSMutableDictionary *parentResult, BOOL parentContent, TFHppleFetchRawContent wantsRawContent)
 {
@@ -168,7 +171,7 @@ NSArray *PerformXPathQuery(xmlDocPtr doc, NSString *query, TFHppleFetchRawConten
   if(xpathCtx == NULL)
     {
 		if (error != NULL)
-			*error = [NSError errorWithDomain:TFHppleErrorDomain code:TFHppleErrorCodeUnableToCreateParsingContext userInfo:nil];
+			*error = LocalizedErrorFromDomainAndCode(TFHppleErrorDomain, TFHppleErrorCodeUnableToCreateParsingContext);
       return nil;
     }
 
@@ -176,7 +179,7 @@ NSArray *PerformXPathQuery(xmlDocPtr doc, NSString *query, TFHppleFetchRawConten
   xpathObj = xmlXPathEvalExpression((xmlChar *)[query cStringUsingEncoding:NSUTF8StringEncoding], xpathCtx);
   if(xpathObj == NULL) {
 	  if (error != NULL)
-		  *error = [NSError errorWithDomain:TFHppleErrorDomain code:TFHppleErrorCodeUnableToEvaluateOrParse userInfo:nil];
+		  *error = LocalizedErrorFromDomainAndCode(TFHppleErrorDomain, TFHppleErrorCodeUnableToEvaluateOrParse);
     xmlXPathFreeContext(xpathCtx);
     return nil;
   }
@@ -217,7 +220,7 @@ NSArray *PerformHTMLXPathQuery(NSData *document, NSString *query, TFHppleFetchRa
   if (doc == NULL)
     {
 		if (error != NULL)
-			*error = [NSError errorWithDomain:TFHppleErrorDomain code:TFHppleErrorCodeUnableToEvaluateOrParse userInfo:nil];
+			*error = LocalizedErrorFromDomainAndCode(TFHppleErrorDomain, TFHppleErrorCodeUnableToEvaluateOrParse);
       return nil;
     }
 
@@ -237,7 +240,7 @@ NSArray *PerformXMLXPathQuery(NSData *document, NSString *query, TFHppleFetchRaw
   if (doc == NULL)
     {
 		if (error != NULL)
-			*error = [NSError errorWithDomain:TFHppleErrorDomain code:TFHppleErrorCodeUnableToEvaluateOrParse userInfo:nil];
+			*error = LocalizedErrorFromDomainAndCode(TFHppleErrorDomain, TFHppleErrorCodeUnableToEvaluateOrParse);
       return nil;
     }
 
@@ -245,4 +248,35 @@ NSArray *PerformXMLXPathQuery(NSData *document, NSString *query, TFHppleFetchRaw
   xmlFreeDoc(doc);
 
   return result;
+}
+
+#pragma mark -
+
+NSError *LocalizedErrorFromDomainAndCode(NSString *domain, NSInteger code)
+{
+	NSString *localizedDescription = nil;
+	
+	if ([domain isEqualToString:TFHppleErrorDomain])
+	{
+		switch (code) {
+			case TFHppleErrorCodeUnableToCreateParsingContext:
+				localizedDescription = @"Unable to create XPath context";
+				break;
+				
+			case TFHppleErrorCodeUnableToEvaluateOrParse:
+				localizedDescription = @"Unable to evaluate or parse XPath. Check console for details.";
+				break;
+				
+			default:
+				break;
+		}
+	}
+	
+	NSDictionary *userInfo = nil;
+	if (localizedDescription.length)
+	{
+		userInfo = @{NSLocalizedDescriptionKey : localizedDescription};
+	}
+	
+	return [NSError errorWithDomain:domain code:code userInfo:userInfo];
 }
