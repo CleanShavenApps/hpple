@@ -153,7 +153,11 @@ NSDictionary *DictionaryForNode(xmlNodePtr ancestorNode, xmlNodePtr currentNode,
     xmlNodeDump(buffer, currentNode->doc, currentNode, 0, 0);
 
     NSString *rawContent = [NSString stringWithCString:(const char *)buffer->content encoding:NSUTF8StringEncoding];
-    [resultForNode setObject:rawContent forKey:@"nodeRawContent"];
+	  
+    if (rawContent)
+    {
+        [resultForNode setObject:rawContent forKey:@"nodeRawContent"];
+    }
 	  
     xmlBufferFree(buffer);
   }
